@@ -33,6 +33,12 @@ npm start                         # serve the build WITH the operator alert (htt
 | Organiser controls | `/organiser` (or `/#/organiser`) | Settings, rehearsal, reset, offline check |
 | Operator alert | `/operator` | Opens on the fountain operator's phone; alerts them when the button is pressed |
 
+In production the operator has a **separate web app** at its own address
+(`https://tuda-operator.intelithon.in`). It contains only the operator screen — no ceremony button
+and no organiser controls — with its own name ("Fountain Operator") and green Home Screen icon.
+Its source is `operator-app/`; it reuses the operator screen from `src/`. The `/operator` page of
+the main app shows the same screen and is what you use with `npm start` on a laptop.
+
 ## Before the ceremony — checklist
 
 1. **Confirm the wording.** All names, spellings, titles and the date are *draft content*.
@@ -236,6 +242,7 @@ src/
   App.jsx, main.jsx, styles.css
 public/
   manifest.webmanifest, sw.js, icons/, _redirects
+operator-app/                  the separate operator web app (npm run build:operator → dist-operator/)
 server/index.mjs               signal server: serves dist/ and relays the alert (npm start)
 scripts/generate-icons.mjs     regenerates the app icons (npm run icons)
 ```

@@ -7,9 +7,10 @@ container and issue the HTTPS certificates.
 | | Domain | Container |
 | --- | --- | --- |
 | Frontend (ceremony, `/organiser`, `/operator`) | `https://tuda.intelithon.in` | `tuda-frontend` (nginx) |
+| Operator web app (operator screen only) | `https://tuda-operator.intelithon.in` | `tuda-operator` (nginx) |
 | Backend (operator alert signal) | `https://tuda-api.intelithon.in` | `tuda-backend` (Node) |
 
-Both DNS A records must point at the server before starting, or the certificates cannot be issued.
+All three DNS A records must point at the server before starting, or the certificates cannot be issued.
 No database is used and no ports are published on the host.
 
 ## First deployment
@@ -49,6 +50,7 @@ Avoid redeploying shortly before the ceremony:
 
 ## Changing the domains
 
-Edit `docker-compose.yml`: `VIRTUAL_HOST` / `LETSENCRYPT_HOST` for both services, `CORS_ORIGIN`
-(the frontend address) on the backend, and `VITE_API_URL` (the backend address + `/api`) on the
-frontend. Then rebuild.
+Edit `docker-compose.yml`: `VIRTUAL_HOST` / `LETSENCRYPT_HOST` for each service, `CORS_ORIGIN`
+(the frontend and operator addresses) on the backend, `VITE_API_URL` (the backend address + `/api`)
+on the frontend and operator, and `VITE_OPERATOR_URL` (the operator address) on the frontend.
+Then rebuild.

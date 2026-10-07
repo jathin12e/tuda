@@ -165,7 +165,8 @@ function OperatorLinkPanel() {
     }
   };
 
-  const operatorUrl = `${window.location.origin}/operator`;
+  // The separate operator web app when one is deployed, else the built-in page.
+  const operatorUrl = import.meta.env.VITE_OPERATOR_URL || `${window.location.origin}/operator`;
   let tone = 'pending';
   let title = 'Checking…';
   let detail = '';

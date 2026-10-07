@@ -1,11 +1,12 @@
-// Regenerates the PNG app icons in public/icons (run with `npm run icons`).
+// Regenerates the PNG app icons (run with `npm run icons`): navy for the main
+// app in public/icons, green for the operator app in operator-app/public/icons.
 // Pure Node, no dependencies: draws a simple gold fountain glyph on navy.
 import fs from 'node:fs';
 import path from 'node:path';
 import zlib from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 
-const outDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'public', 'icons');
+const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 const CRC_TABLE = Array.from({ length: 256 }, (_, n) => {
   let c = n;
@@ -86,12 +87,23 @@ function insideGlyph(u, v) {
 }
 
 const mix = (a, b, t) => Math.round(a + (b - a) * t);
-const NAVY_IN = [0x12, 0x35, 0x6b];
-const NAVY_OUT = [0x04, 0x0f, 0x22];
-const GOLD = [0xe3, 0xc0, 0x6d];
 const SAMPLES = 3;
+const ICON_SETS = [
+  {
+    dir: path.join(root, 'public', 'icons'),
+    inner: [0x12, 0x35, 0x6b],
+    outer: [0x04, 0x0f, 0x22],
+    glyph: [0xe3, 0xc0, 0x6d],
+  },
+  {
+    dir: path.join(root, 'operator-app', 'public', 'icons'),
+    inner: [0x16, 0x8a, 0x48],
+    outer: [0x06, 0x3a, 0x1c],
+    glyph: [0xff, 0xff, 0xff],
+  },
+];
 
-function render(size) {
+function render(size, { inner, outer, glyph }) {
   const pixels = Buffer.alloc(size * size * 4);
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
@@ -105,7 +117,7 @@ function render(size) {
       const radial = Math.min(1, Math.hypot((x + 0.5) / size - 0.5, (y + 0.5) / size - 0.38) / 0.75);
       const offset = (y * size + x) * 4;
       for (let c = 0; c < 3; c++) {
-        pixels[offset + c] = mix(mix(NAVY_IN[c], NAVY_OUT[c], radial), GOLD[c], coverage);
+        pixels[offset + c] = mix(mix(inner[c], outer[c], radial), glyph[c], coverage);
       }
       pixels[offset + 3] = 255;
     }
@@ -113,12 +125,14 @@ function render(size) {
   return encodePng(size, pixels);
 }
 
-fs.mkdirSync(outDir, { recursive: true });
-for (const [name, size] of [
-  ['apple-touch-icon.png', 180],
-  ['icon-192.png', 192],
-  ['icon-512.png', 512],
-]) {
-  fs.writeFileSync(path.join(outDir, name), render(size));
-  console.log(`wrote ${name} (${size}x${size})`);
+for (const set of ICON_SETS) {
+  fs.mkdirSync(set.dir, { recursive: true });
+  for (const [name, size] of [
+    ['apple-touch-icon.png', 180],
+    ['icon-192.png', 192],
+    ['icon-512.png', 512],
+  ]) {
+    fs.writeFileSync(path.join(set.dir, name), render(size, set));
+    console.log(`wrote ${path.relative(root, path.join(set.dir, name))}`);
+  }
 }
