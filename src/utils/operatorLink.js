@@ -6,9 +6,12 @@
  * there is no signal server, every call fails quietly, and the ceremony is
  * unaffected.
  */
-const SIGNAL_URL = '/api/signal';
-const STATE_URL = '/api/state';
-export const EVENTS_URL = '/api/events?role=operator';
+// Same server by default (`npm start`). When the API is hosted on its own
+// domain, set VITE_API_URL at build time, e.g. https://tuda-api.example.org/api
+const API_URL = (import.meta.env.VITE_API_URL || '/api').replace(/\/+$/, '');
+const SIGNAL_URL = `${API_URL}/signal`;
+const STATE_URL = `${API_URL}/state`;
+export const EVENTS_URL = `${API_URL}/events?role=operator`;
 
 const RETRY_DELAY_MS = 2000;
 const MAX_ATTEMPTS = 15;
@@ -16,7 +19,9 @@ const MAX_ATTEMPTS = 15;
 async function post(payload) {
   const response = await fetch(SIGNAL_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    // Sent as plain text (still JSON inside) so that a cross-domain API needs
+    // no CORS preflight round-trip before the alert goes out.
+    headers: { 'Content-Type': 'text/plain' },
     body: JSON.stringify(payload),
     keepalive: true,
     cache: 'no-store',

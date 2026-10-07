@@ -20,6 +20,13 @@ import { fileURLToPath } from 'node:url';
 const PORT = Number(process.env.PORT) || 8080;
 const DIST = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'dist');
 const HEARTBEAT_MS = 10000;
+// Sites allowed to use the API from another domain, comma separated,
+// e.g. CORS_ORIGIN=https://tuda.example.org. Not needed when this server also
+// serves the app itself.
+const CORS_ORIGINS = (process.env.CORS_ORIGIN || '')
+  .split(',')
+  .map((origin) => origin.trim().replace(/\/+$/, ''))
+  .filter(Boolean);
 const MAX_BODY_BYTES = 2048;
 
 const CONTENT_TYPES = {
@@ -105,10 +112,17 @@ function applySignal(signal) {
 
 /* ---- HTTP ---------------------------------------------------------------- */
 
+function corsHeaders(req) {
+  const origin = req.headers.origin;
+  if (!origin || !CORS_ORIGINS.includes(origin)) return {};
+  return { 'Access-Control-Allow-Origin': origin, Vary: 'Origin' };
+}
+
 function json(res, status, body) {
   res.writeHead(status, {
     'Content-Type': 'application/json; charset=utf-8',
     'Cache-Control': 'no-store',
+    ...corsHeaders(res.req),
   });
   res.end(JSON.stringify(body));
 }
@@ -119,6 +133,7 @@ function handleEvents(req, res, url) {
     'Cache-Control': 'no-cache, no-transform',
     Connection: 'keep-alive',
     'X-Accel-Buffering': 'no',
+    ...corsHeaders(req),
   });
   res.write('retry: 2000\n\n');
 
@@ -195,6 +210,16 @@ function serveStatic(req, res, url) {
 const server = http.createServer((req, res) => {
   const url = new URL(req.url, 'http://localhost');
 
+  if (url.pathname.startsWith('/api/') && req.method === 'OPTIONS') {
+    res.writeHead(204, {
+      ...corsHeaders(req),
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Max-Age': '86400',
+    });
+    return res.end();
+  }
+  if (url.pathname === '/api/health' && req.method === 'GET') return json(res, 200, { ok: true });
   if (url.pathname === '/api/state' && req.method === 'GET') return json(res, 200, { ok: true, ...snapshot() });
   if (url.pathname === '/api/events' && req.method === 'GET') return handleEvents(req, res, url);
   if (url.pathname === '/api/signal' && req.method === 'POST') return handleSignal(req, res);
