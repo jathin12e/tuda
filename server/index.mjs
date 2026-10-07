@@ -83,6 +83,9 @@ function applySignal(signal) {
       status: 'go',
       rehearsal: signal.rehearsal === true,
       at,
+      // Server clock, so operator screens can run the countdown in step even
+      // if the ceremony device's own clock is wrong.
+      receivedAt: Date.now(),
       acknowledgedAt: null,
       seq: ++sequence,
     };

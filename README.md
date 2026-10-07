@@ -1,7 +1,7 @@
 # TUDA Amani Kere Musical Fountain — Inauguration Screen
 
 A ceremony web app for the inauguration of the Amani Kere Musical Fountain, designed for an iPad
-in landscape. The dignitary touches **INAUGURATE**, a three-second unveiling plays, and a
+in landscape. The dignitary touches **INAUGURATE**, the screen counts **3 · 2 · 1**, the curtain opens, and a
 "Ceremonially Inaugurated" screen stays up until the organiser resets it.
 
 > **This app does not start the fountain.**
@@ -99,9 +99,10 @@ keep the iPad supervised.
 
 ## Operator alert — telling the operator when to start
 
-When the dignitary presses the button, the operator's phone shows a flashing full-screen
-**"START THE FOUNTAIN NOW"** (with a beeping alarm and vibration where the phone allows it).
-The operator then starts the fountain by hand. In testing on one computer the alert arrived in
+When the dignitary presses the button, the operator's phone counts **3 · 2 · 1** in step with the
+ceremony screen and then shows a flashing full-screen **"START THE FOUNTAIN NOW"** (with a beeping alarm and vibration where the phone allows it).
+The operator starts the fountain by hand as the count reaches zero, so the water rises as the
+curtain opens. (The length of the count is `COUNTDOWN_SECONDS` in `src/config/eventConfig.js`.) In testing on one computer the alert arrived in
 under a tenth of a second; on a real network expect a fraction of a second.
 
 This needs the signal server, so the app must be run with `npm start` rather than as plain static
@@ -225,7 +226,7 @@ src/
   utils/operatorLink.js        sends the button-pressed signal to the signal server
   components/
     WelcomeScreen.jsx          welcome screen and the INAUGURATE button
-    UnveilingScreen.jsx        golden light and curtain reveal (about 3 seconds)
+    UnveilingScreen.jsx        golden light, 3 · 2 · 1 countdown and curtain reveal
     InauguratedScreen.jsx      persistent acknowledgement screen
     FountainAnimation.jsx      decorative SVG fountain
     Confetti.jsx               short gold confetti burst (canvas)

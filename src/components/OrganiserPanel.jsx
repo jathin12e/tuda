@@ -443,7 +443,7 @@ export default function OrganiserPanel({
   };
 
   const testSound = () => {
-    const revealDelay = 0.9;
+    const revealDelay = 1.5;
     const played = playCeremonyChime({ revealDelay });
     const spoken = speakAfter(draft.event.thankYouMessage, (revealDelay + CHIME_TAIL) * 1000);
     setSoundMessage(

@@ -109,11 +109,11 @@ export function speakAfter(text, delayMs) {
 export const CHIME_TAIL = 2.3;
 
 /**
- * Plays a short rising prelude straight away and a brighter chime after
- * `revealDelay` seconds (timed to the moment the curtain opens).
+ * Plays one rising bell per second of the countdown, then a brighter chime
+ * after `revealDelay` seconds (the moment the curtain opens).
  * Returns true if the sound was scheduled.
  */
-export function playCeremonyChime({ revealDelay = 2.1 } = {}) {
+export function playCeremonyChime({ revealDelay = 3 } = {}) {
   try {
     const ac = getContext();
     if (!ac) return false;
@@ -127,9 +127,10 @@ export function playCeremonyChime({ revealDelay = 2.1 } = {}) {
     master.connect(ac.destination);
     const start = ac.currentTime + 0.04;
 
-    // Prelude: G4, C5, E5
-    [392.0, 523.25, 659.25].forEach((frequency, index) => {
-      bell(ac, master, frequency, start + index * 0.2, 1.4, 0.1);
+    // Countdown: G4, C5, E5 — one bell for each number, spread evenly.
+    const beats = [392.0, 523.25, 659.25];
+    beats.forEach((frequency, index) => {
+      bell(ac, master, frequency, start + (index * revealDelay) / beats.length, 1.2, 0.13);
     });
 
     // Reveal: C5, E5, G5, C6, E6 arpeggio with a sustained root

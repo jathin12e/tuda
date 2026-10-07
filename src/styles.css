@@ -656,7 +656,7 @@ button {
   );
   box-shadow: 0 0 6vmax 3vmax rgba(236, 208, 138, 0.55);
   transform: scale(0);
-  animation: unveil-light 1.15s cubic-bezier(0.55, 0, 0.3, 1) forwards;
+  animation: unveil-light 0.5s cubic-bezier(0.4, 0, 0.3, 1) forwards;
   transition: opacity 0.6s ease;
   will-change: transform, opacity;
 }
@@ -717,29 +717,58 @@ button {
   transform: translateX(103%);
 }
 
-.unveil__title {
+.unveil__centre {
   position: absolute;
   top: 50%;
   right: 6vw;
   left: 6vw;
   color: var(--navy-900);
   font-family: var(--serif);
-  font-size: clamp(26px, 5.2vmin, 64px);
-  font-weight: 600;
-  line-height: 1.15;
   text-align: center;
   opacity: 0;
   transform: translateY(-50%);
-  transition: opacity 0.5s ease;
+  transition: opacity 0.3s ease 0.2s;
 }
 
-.unveil--hold .unveil__title {
+.unveil--light .unveil__centre,
+.unveil--hold .unveil__centre {
   opacity: 1;
 }
 
-.unveil--open .unveil__title {
-  opacity: 0;
-  transition-duration: 0.25s;
+.unveil--open .unveil__centre {
+  transition: opacity 0.25s ease;
+}
+
+.unveil__title {
+  font-size: clamp(20px, 3.6vmin, 44px);
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+.unveil__count {
+  font-size: clamp(120px, 38vmin, 420px);
+  font-weight: 700;
+  line-height: 1;
+  animation: count-pop 1s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes count-pop {
+  0% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+  25% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  80% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0.2;
+    transform: scale(0.9);
+  }
 }
 
 /* ==========================================================================
@@ -776,6 +805,10 @@ button {
 
   .unveil__curtain {
     transition: opacity 1s ease;
+  }
+
+  .unveil__count {
+    animation: none;
   }
 
   .unveil--open .unveil__curtain--left,
@@ -1422,6 +1455,12 @@ button {
 .operator__headline--go {
   font-size: clamp(44px, 13vw, 130px);
   text-transform: uppercase;
+}
+
+.operator__count {
+  font-size: clamp(160px, 52vw, 420px);
+  font-weight: 800;
+  line-height: 0.95;
 }
 
 .operator__detail {

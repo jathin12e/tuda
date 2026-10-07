@@ -53,6 +53,13 @@ export const defaultEventConfig = {
 export const DEFAULT_LOGO_URL = '';
 export const DEFAULT_BACKGROUND_URL = '';
 
+/*
+ * Seconds counted down (3 · 2 · 1) between the touch and the curtain opening.
+ * The operator's screen shows the same countdown, so the fountain can be
+ * started exactly as the curtain opens.
+ */
+export const COUNTDOWN_SECONDS = 3;
+
 export const defaultOptions = {
   soundEnabled: false,
   rehearsalMode: false,

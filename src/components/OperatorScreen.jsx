@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
+import { COUNTDOWN_SECONDS } from '../config/eventConfig.js';
 import { EVENTS_URL, sendSignalOnce } from '../utils/operatorLink.js';
 import { playBeep, startAlarm, stopAlarm, unlockAudio } from '../utils/sound.js';
 
 /*
  * Operator screen (/operator). Open it on the fountain operator's phone.
- * It listens to the signal server and shows a full-screen alert the moment the
- * dignitary presses the button. The operator then starts the fountain by hand:
+ * It listens to the signal server. The moment the dignitary presses the button
+ * it counts 3 · 2 · 1 in step with the ceremony screen, then shows a full-screen
+ * alert. The operator starts the fountain by hand as the count reaches zero:
  * this screen controls nothing.
  */
 
@@ -135,13 +137,24 @@ export default function OperatorScreen({ eventTitle }) {
   }, []);
 
   useEffect(() => {
-    const timer = setInterval(() => setNow(Date.now()), 1000);
+    const timer = setInterval(() => setNow(Date.now()), 100);
     return () => clearInterval(timer);
   }, []);
 
   const go = Boolean(signal && signal.status === 'go');
   const acknowledged = go && Boolean(signal.acknowledgedAt);
-  const alerting = go && !acknowledged && silenced !== signal.seq;
+  // Time since the button was pressed, measured on the server's clock.
+  const sinceMs = go ? now - clockOffset.current - (signal.receivedAt || Date.parse(signal.at)) : 0;
+  const counting = go && sinceMs < COUNTDOWN_SECONDS * 1000;
+  const count = counting ? COUNTDOWN_SECONDS - Math.max(0, Math.floor(sinceMs / 1000)) : 0;
+  const alerting = go && !counting && !acknowledged && silenced !== signal.seq;
+
+  // A beep and a buzz on each number of the countdown.
+  useEffect(() => {
+    if (!count) return;
+    if (soundOnRef.current) playBeep();
+    if (navigator.vibrate) navigator.vibrate(150);
+  }, [count]);
 
   // Alarm and vibration while an alert is waiting to be acknowledged.
   useEffect(() => {
@@ -166,13 +179,15 @@ export default function OperatorScreen({ eventTitle }) {
     sendSignalOnce({ type: 'ack' });
   };
 
-  const elapsed = go ? formatElapsed(now - clockOffset.current - Date.parse(signal.at)) : '';
+  const elapsed = go ? formatElapsed(sinceMs) : '';
   let mode = 'standby';
   if (link !== 'live') mode = 'lost';
+  else if (counting) mode = 'count';
   else if (go) mode = signal.rehearsal ? 'rehearsal' : 'go';
+  const tone = mode === 'count' ? (signal.rehearsal ? 'rehearsal' : 'go') : mode;
 
   return (
-    <main className={`operator operator--${mode}${alerting && link === 'live' ? ' is-alerting' : ''}`}>
+    <main className={`operator operator--${tone}${alerting && link === 'live' ? ' is-alerting' : ''}`}>
       <header className="operator__bar">
         <span className={`operator__link operator__link--${link}`}>
           {link === 'live' ? 'Connected' : link === 'connecting' ? 'Connecting…' : 'No connection'}
@@ -198,8 +213,22 @@ export default function OperatorScreen({ eventTitle }) {
             <p className="operator__kicker">Standby</p>
             <p className="operator__headline">Waiting for the button</p>
             <p className="operator__detail">
-              This screen will alert you the moment the dignitary presses INAUGURATE. Keep it open
-              and in view.
+              When the dignitary presses INAUGURATE this screen counts 3 · 2 · 1, then tells you to
+              start. Keep it open and in view.
+            </p>
+          </>
+        )}
+
+        {mode === 'count' && (
+          <>
+            <p className="operator__kicker">
+              {signal.rehearsal ? 'Rehearsal — get ready' : 'Button pressed — get ready'}
+            </p>
+            <p className="operator__count">{count}</p>
+            <p className="operator__detail">
+              {signal.rehearsal
+                ? 'Practice run. The start cue follows the count.'
+                : 'Start the fountain when the count reaches zero.'}
             </p>
           </>
         )}
@@ -225,7 +254,7 @@ export default function OperatorScreen({ eventTitle }) {
           </>
         )}
 
-        {go && link === 'live' && (
+        {go && !counting && link === 'live' && (
           <div className="operator__actions">
             {acknowledged || silenced === signal.seq ? (
               <p className="operator__acknowledged">Acknowledged</p>

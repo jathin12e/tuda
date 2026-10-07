@@ -4,7 +4,11 @@ import OperatorScreen from './components/OperatorScreen.jsx';
 import OrganiserPanel from './components/OrganiserPanel.jsx';
 import UnveilingScreen from './components/UnveilingScreen.jsx';
 import WelcomeScreen from './components/WelcomeScreen.jsx';
-import { DEFAULT_BACKGROUND_URL, DEFAULT_LOGO_URL } from './config/eventConfig.js';
+import {
+  COUNTDOWN_SECONDS,
+  DEFAULT_BACKGROUND_URL,
+  DEFAULT_LOGO_URL,
+} from './config/eventConfig.js';
 import { useCeremonyState } from './hooks/useCeremonyState.js';
 import { useSettings } from './hooks/useSettings.js';
 import { sendSignal } from './utils/operatorLink.js';
@@ -99,7 +103,7 @@ export default function App() {
     setOrigin({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
     // Started inside the tap itself, as Safari requires. Failure is silent.
     if (settings.soundEnabled) {
-      const revealDelay = 2.1;
+      const revealDelay = COUNTDOWN_SECONDS;
       playCeremonyChime({ revealDelay });
       speakAfter(settings.event.thankYouMessage, (revealDelay + CHIME_TAIL) * 1000);
     }
