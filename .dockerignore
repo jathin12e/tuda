@@ -4,3 +4,4 @@ dist-operator
 .git
 .env
 *.md
+data

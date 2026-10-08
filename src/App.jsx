@@ -66,7 +66,8 @@ function OrganiserButton({ onOpen }) {
 
 export default function App() {
   const [route, navigate] = useRoute();
-  const { settings, images, storageAvailable, saveEventDetails, setOption } = useSettings();
+  const { settings, images, storageAvailable, sharing, saveEventDetails, setOption } =
+    useSettings();
   const ceremony = useCeremonyState();
   const { phase, official, celebrate, activate, complete, reset } = ceremony;
 
@@ -136,6 +137,7 @@ export default function App() {
         settings={settings}
         images={images}
         storageAvailable={storageAvailable}
+        sharing={sharing}
         ceremony={{ ...ceremony, reset: handleReset }}
         onSaveEvent={saveEventDetails}
         onSetOption={handleSetOption}

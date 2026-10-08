@@ -62,7 +62,15 @@ There are two ways, and they work together:
 
 - **On the device — `/organiser`.** Edit the title, organiser, location, date, dignitary names and
   titles and the acknowledgement text; upload an optional logo and background image; press
-  **Preview**, then **Save settings**. Saved values are stored in that browser only.
+  **Preview**, then **Save settings**. When the app runs with its server (`npm start` or the
+  production deployment) the wording, logo and background are **saved for every device**: other
+  screens pick them up within about ten seconds, and a new device shows them straight away. Each
+  device also keeps a copy so it works offline. Sound and Rehearsal Mode are *not* shared — they
+  stay separate on each device. On plain static hosting (no server) settings stay on that device.
+- **Organiser PIN.** If the server is started with `ORGANISER_PIN` set, the organiser page asks for
+  that PIN before it will save for every device (without it the change stays on that one device).
+  The PIN is remembered on a device once typed. It only protects saving the shared settings; the
+  rest of the organiser page still has no login.
 - **In the code — `src/config/eventConfig.js`.** This single file holds the built-in defaults.
   Edit it and rebuild to change what every device starts with. To ship a logo or background with
   the app, copy the file into `public/` and set `DEFAULT_LOGO_URL` / `DEFAULT_BACKGROUND_URL`.
@@ -147,6 +155,7 @@ Limits you should know about:
 - There is no login. Anyone on the same network who knows the address could open these pages or
   send a false alert. Use a private hotspot rather than public Wi-Fi.
 - The server keeps the alert state in memory; restarting it returns operator screens to standby.
+  (Shared event settings are different: they are written to disk and survive a restart.)
 
 ## Sound
 

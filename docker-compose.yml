@@ -11,10 +11,15 @@ services:
     environment:
       PORT: "4000"
       CORS_ORIGIN: https://tuda.intelithon.in,https://tuda-operator.intelithon.in
+      # Needed on the organiser page to save settings for every device (set in .env).
+      ORGANISER_PIN: ${ORGANISER_PIN:-}
       VIRTUAL_HOST: tuda-api.intelithon.in
       VIRTUAL_PORT: "4000"
       LETSENCRYPT_HOST: tuda-api.intelithon.in
       LETSENCRYPT_EMAIL: ${LETSENCRYPT_EMAIL}
+    volumes:
+      # Shared event settings (wording, logo, background) survive redeploys here.
+      - tuda-data:/data
     networks:
       - proxy
 
@@ -56,6 +61,9 @@ services:
       - proxy
     depends_on:
       - backend
+
+volumes:
+  tuda-data:
 
 networks:
   proxy:

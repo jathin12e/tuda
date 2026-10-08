@@ -11,6 +11,8 @@ export const KEYS = {
   logo: 'tuda-ceremony:logo',
   background: 'tuda-ceremony:background',
   resetSignal: 'tuda-ceremony:reset-signal',
+  syncedAt: 'tuda-ceremony:synced-at',
+  pin: 'tuda-ceremony:organiser-pin',
 };
 
 const IMAGE_PATTERN = /^data:image\/(png|jpeg|webp);base64,/;
@@ -131,4 +133,24 @@ export function clearCeremonyRecord() {
   // Lets a ceremony screen open in another tab return to the welcome screen.
   writeRaw(KEYS.resetSignal, String(Date.now()));
   return removed && readRaw(KEYS.status) === null;
+}
+
+/* ---- Shared settings bookkeeping ---------------------------------------- */
+
+/** Version of the shared settings this device last received from the server. */
+export function loadSyncedAt() {
+  return readRaw(KEYS.syncedAt) || '';
+}
+
+export function saveSyncedAt(value) {
+  return writeRaw(KEYS.syncedAt, String(value || ''));
+}
+
+/** Organiser PIN, remembered on this device so it is typed only once. */
+export function loadPin() {
+  return readRaw(KEYS.pin) || '';
+}
+
+export function savePin(value) {
+  return value ? writeRaw(KEYS.pin, String(value)) : removeRaw(KEYS.pin);
 }

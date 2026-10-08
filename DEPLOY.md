@@ -11,14 +11,16 @@ container and issue the HTTPS certificates.
 | Backend (operator alert signal) | `https://tuda-api.intelithon.in` | `tuda-backend` (Node) |
 
 All three DNS A records must point at the server before starting, or the certificates cannot be issued.
-No database is used and no ports are published on the host.
+No database is used and no ports are published on the host. The shared event settings (wording,
+logo, background image) are one JSON file in the `tuda-data` Docker volume, which survives
+rebuilds and redeploys.
 
 ## First deployment
 
 ```bash
 cd /root/apps
 git clone https://github.com/jathin12e/tuda.git tuda && cd tuda
-cp .env.example .env          # then set LETSENCRYPT_EMAIL
+cp .env.example .env          # then set LETSENCRYPT_EMAIL and ORGANISER_PIN
 docker compose build
 docker compose up -d
 ```
@@ -47,6 +49,13 @@ Avoid redeploying shortly before the ceremony:
 
 - Restarting `tuda-backend` returns operator screens to standby (the alert state is kept in memory).
 - A new frontend build is only picked up by a device after the app is fully closed and reopened.
+
+## Organiser PIN and saved settings
+
+- `ORGANISER_PIN` in `.env` is the PIN the organiser page asks for before saving settings for
+  every device. Change it there, then `docker compose up -d backend`.
+- To wipe the shared settings and return every device to the built-in defaults:
+  `docker compose down && docker volume rm tuda_tuda-data && docker compose up -d`.
 
 ## Changing the domains
 

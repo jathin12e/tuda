@@ -3,6 +3,7 @@ import { EVENT_FIELD_GROUPS, defaultEventConfig } from '../config/eventConfig.js
 import { fileToDataUrl } from '../utils/image.js';
 import { queryOfflineStatus } from '../utils/offline.js';
 import { fetchLinkStatus, sendSignalOnce } from '../utils/operatorLink.js';
+import { loadPin, savePin } from '../utils/storage.js';
 import {
   CHIME_TAIL,
   isSoundSupported,
@@ -330,12 +331,15 @@ export default function OrganiserPanel({
   settings,
   images,
   storageAvailable,
+  sharing,
   ceremony,
   onSaveEvent,
   onSetOption,
   onOpenCeremony,
 }) {
   const [draft, setDraft] = useState(() => ({ event: settings.event, ...images }));
+  const [pin, setPin] = useState(loadPin);
+  const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState(null);
   const [imageErrors, setImageErrors] = useState({});
   const [preview, setPreview] = useState(null);
@@ -350,6 +354,21 @@ export default function OrganiserPanel({
     !sameEvent(draft.event, settings.event) ||
     draft.logo !== images.logo ||
     draft.background !== images.background;
+
+  // When settings saved on another device arrive, show them in the form —
+  // unless this device has unsaved edits of its own.
+  const lastApplied = useRef({ event: settings.event, ...images });
+  useEffect(() => {
+    const previous = lastApplied.current;
+    lastApplied.current = { event: settings.event, ...images };
+    setDraft((current) => {
+      const untouched =
+        sameEvent(current.event, previous.event) &&
+        current.logo === previous.logo &&
+        current.background === previous.background;
+      return untouched ? { event: settings.event, ...images } : current;
+    });
+  }, [settings.event, images]);
 
   const closePreview = useCallback(() => setPreview(null), []);
   const cancelReset = useCallback(() => setConfirmingReset(false), []);
@@ -390,21 +409,44 @@ export default function OrganiserPanel({
     setImageErrors((current) => ({ ...current, [key]: null }));
   };
 
-  const save = () => {
-    const result = onSaveEvent(draft.event, { logo: draft.logo, background: draft.background });
+  const save = async () => {
+    setSaving(true);
+    setSaveMessage(null);
+    savePin(pin.trim());
+    const result = await onSaveEvent(
+      draft.event,
+      { logo: draft.logo, background: draft.background },
+      pin.trim()
+    );
+    setSaving(false);
     setDraft((current) => ({ ...current, event: result.event }));
-    if (!result.settingsSaved) {
+
+    const localProblem = !result.settingsSaved
+      ? ' This browser would not store them, so on this device they will be lost when the page is closed.'
+      : !result.logoSaved || !result.backgroundSaved
+        ? ' An image was too large to keep on this device for offline use.'
+        : '';
+
+    if (result.shared === 'shared') {
       setSaveMessage({
-        tone: 'warn',
-        text: 'Applied for now, but this browser would not store the settings. They will be lost if the page is closed or refreshed.',
+        tone: localProblem ? 'warn' : 'ok',
+        text: `Saved for every device. Other screens update within a few seconds.${localProblem}`,
       });
-    } else if (!result.logoSaved || !result.backgroundSaved) {
+    } else if (result.shared === 'pin') {
       setSaveMessage({
         tone: 'warn',
-        text: 'Event details saved, but an image was too large to store on this device. It will be lost on refresh — try a smaller image.',
+        text: 'Saved on THIS device only: the organiser PIN is missing or wrong, so other devices were not updated. Enter the PIN and save again.',
+      });
+    } else if (result.shared === 'too-large') {
+      setSaveMessage({
+        tone: 'warn',
+        text: 'Saved on THIS device only: the images are too large to share. Try a smaller background image and save again.',
       });
     } else {
-      setSaveMessage({ tone: 'ok', text: 'Settings saved on this device.' });
+      setSaveMessage({
+        tone: 'warn',
+        text: `Saved on THIS device only: the server could not be reached, so other devices were not updated. Check the connection and save again.${localProblem}`,
+      });
     }
   };
 
@@ -625,7 +667,7 @@ export default function OrganiserPanel({
           <h2 id="details-heading">Event details</h2>
           <p className="hint">
             Draft wording — please confirm every name, spelling and title. Leave a field empty to
-            hide that line. Changes apply after “Save settings”.
+            hide that line. Changes apply after “Save settings”, on every device.
           </p>
 
           {EVENT_FIELD_GROUPS.map((group) => (
@@ -672,6 +714,30 @@ export default function OrganiserPanel({
           </fieldset>
 
           <div className="save-bar">
+            {sharing ? (
+              <p className="hint">
+                Saving here updates <strong>every device</strong> that opens this site (wording, logo
+                and background). Sound and Rehearsal Mode stay separate on each device.
+              </p>
+            ) : (
+              <p className="notice notice--warn">
+                The server cannot be reached, so settings will be saved on this device only.
+              </p>
+            )}
+            {sharing && sharing.pinRequired && (
+              <div className="field field--pin">
+                <label htmlFor="organiser-pin">Organiser PIN (needed to save for every device)</label>
+                <input
+                  id="organiser-pin"
+                  type="password"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  value={pin}
+                  maxLength={32}
+                  onChange={(event) => setPin(event.target.value)}
+                />
+              </div>
+            )}
             <p className={`save-bar__state${dirty ? ' save-bar__state--dirty' : ''}`} role="status">
               {dirty ? 'Unsaved changes' : 'No unsaved changes'}
             </p>
@@ -679,8 +745,8 @@ export default function OrganiserPanel({
               <button type="button" className="btn" onClick={() => setPreview('welcome')}>
                 Preview
               </button>
-              <button type="button" className="btn btn--primary" onClick={save} disabled={!dirty}>
-                Save settings
+              <button type="button" className="btn btn--primary" onClick={save} disabled={saving}>
+                {saving ? 'Saving…' : 'Save settings'}
               </button>
               <button type="button" className="btn btn--quiet" onClick={discard} disabled={!dirty}>
                 Discard changes

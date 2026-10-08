@@ -5,6 +5,8 @@
  *   1. Serves the built app from dist/.
  *   2. Relays the "button pressed" signal from the ceremony screen to any
  *      operator screens (/operator) that are listening.
+ *   3. Stores the event settings (wording, logo, background image) so every
+ *      device shows the same thing.
  *
  * It alerts a PERSON — the fountain operator. It does not talk to the fountain,
  * PLC, pumps, lights or music system.
@@ -28,6 +30,15 @@ const CORS_ORIGINS = (process.env.CORS_ORIGIN || '')
   .map((origin) => origin.trim().replace(/\/+$/, ''))
   .filter(Boolean);
 const MAX_BODY_BYTES = 2048;
+
+// Shared event settings are kept in one JSON file so they survive a restart.
+const DATA_DIR = process.env.DATA_DIR || path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'data');
+const SETTINGS_FILE = path.join(DATA_DIR, 'settings.json');
+const MAX_SETTINGS_BYTES = 6 * 1024 * 1024;
+const MAX_IMAGE_CHARS = 4 * 1024 * 1024;
+const IMAGE_PATTERN = /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/;
+// When set, saving shared settings requires this PIN (reading never does).
+const ORGANISER_PIN = (process.env.ORGANISER_PIN || '').trim();
 
 const CONTENT_TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -113,6 +124,46 @@ function applySignal(signal) {
   return true;
 }
 
+/* ---- Shared settings ---------------------------------------------------- */
+
+function loadSharedSettings() {
+  try {
+    const stored = JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8'));
+    return stored && typeof stored.updatedAt === 'string' ? stored : null;
+  } catch {
+    return null;
+  }
+}
+
+let sharedSettings = loadSharedSettings();
+
+function cleanImage(value) {
+  if (value === '' || value === undefined || value === null) return '';
+  if (typeof value !== 'string' || value.length > MAX_IMAGE_CHARS) return null;
+  return IMAGE_PATTERN.test(value) ? value : null;
+}
+
+// Keeps only short strings; the app itself decides which keys it understands.
+function cleanEvent(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const entries = Object.entries(value);
+  if (entries.length > 40) return null;
+  const clean = {};
+  for (const [key, text] of entries) {
+    if (key.length > 40 || typeof text !== 'string' || text.length > 200) return null;
+    clean[key] = text;
+  }
+  return clean;
+}
+
+function storeSharedSettings(next) {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+  const temporary = `${SETTINGS_FILE}.tmp`;
+  fs.writeFileSync(temporary, JSON.stringify(next));
+  fs.renameSync(temporary, SETTINGS_FILE);
+  sharedSettings = next;
+}
+
 /* ---- HTTP ---------------------------------------------------------------- */
 
 function corsHeaders(req) {
@@ -170,6 +221,57 @@ function handleSignal(req, res) {
   });
 }
 
+function handleGetSettings(res, url) {
+  const current = sharedSettings ? sharedSettings.updatedAt : '';
+  const unchanged = url.searchParams.get('since') === current;
+  json(res, 200, {
+    ok: true,
+    pinRequired: Boolean(ORGANISER_PIN),
+    changed: !unchanged,
+    settings: unchanged ? undefined : sharedSettings,
+  });
+}
+
+function handleSaveSettings(req, res) {
+  const chunks = [];
+  let size = 0;
+  let tooLarge = false;
+  req.on('data', (chunk) => {
+    size += chunk.length;
+    if (size > MAX_SETTINGS_BYTES) tooLarge = true;
+    else chunks.push(chunk);
+  });
+  req.on('end', () => {
+    if (tooLarge) return json(res, 413, { ok: false });
+    let body = null;
+    try {
+      body = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+    } catch {
+      return json(res, 400, { ok: false });
+    }
+    if (!body || typeof body !== 'object') return json(res, 400, { ok: false });
+
+    if (ORGANISER_PIN && String(body.pin || '').trim() !== ORGANISER_PIN) {
+      // A short pause makes guessing the PIN slow.
+      return setTimeout(() => json(res, 401, { ok: false }), 800);
+    }
+
+    const event = cleanEvent(body.event);
+    const logo = cleanImage(body.logo);
+    const background = cleanImage(body.background);
+    if (!event || logo === null || background === null) return json(res, 400, { ok: false });
+
+    try {
+      storeSharedSettings({ updatedAt: new Date().toISOString(), event, logo, background });
+    } catch (error) {
+      console.error('[settings] could not save:', error.message);
+      return json(res, 500, { ok: false });
+    }
+    console.log(`[settings] saved (${Math.round(size / 1024)} KB)`);
+    return json(res, 200, { ok: true, updatedAt: sharedSettings.updatedAt });
+  });
+}
+
 function serveStatic(req, res, url) {
   let relative;
   try {
@@ -223,6 +325,8 @@ const server = http.createServer((req, res) => {
     return res.end();
   }
   if (url.pathname === '/api/health' && req.method === 'GET') return json(res, 200, { ok: true });
+  if (url.pathname === '/api/settings' && req.method === 'GET') return handleGetSettings(res, url);
+  if (url.pathname === '/api/settings' && req.method === 'POST') return handleSaveSettings(req, res);
   if (url.pathname === '/api/state' && req.method === 'GET') return json(res, 200, { ok: true, ...snapshot() });
   if (url.pathname === '/api/events' && req.method === 'GET') return handleEvents(req, res, url);
   if (url.pathname === '/api/signal' && req.method === 'POST') return handleSignal(req, res);

@@ -4,3 +4,4 @@ dist-operator
 *.local
 .DS_Store
 .env
+data

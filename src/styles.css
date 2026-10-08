@@ -1703,3 +1703,7 @@ button {
     gap: 0;
   }
 }
+
+.field--pin {
+  max-width: 320px;
+}
