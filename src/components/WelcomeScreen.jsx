@@ -50,7 +50,7 @@ export default function WelcomeScreen({
               disabled={disabled}
               tabIndex={preview ? -1 : undefined}
             >
-              <span className="inaugurate-btn__label">{event.buttonLabel || 'INAUGURATE'}</span>
+              <span className="inaugurate-btn__label">{event.buttonLabel || 'SWITCH ON'}</span>
             </button>
             {event.buttonHint && <p className="action__hint">{event.buttonHint}</p>}
           </div>

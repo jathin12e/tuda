@@ -1,7 +1,7 @@
 /*
  * Ceremony chime, generated locally with the Web Audio API (no audio files).
  *
- * Audio is only ever started from inside a user gesture (the INAUGURATE tap or
+ * Audio is only ever started from inside a user gesture (the SWITCH ON tap or
  * the organiser's "Test Sound" button), which is what Safari requires. Every
  * call is defensive: if audio is unavailable the function returns false and
  * the ceremony carries on silently.

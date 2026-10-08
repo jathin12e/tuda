@@ -213,7 +213,7 @@ export default function OperatorScreen({ eventTitle }) {
             <p className="operator__kicker">Standby</p>
             <p className="operator__headline">Waiting for the button</p>
             <p className="operator__detail">
-              When the dignitary presses INAUGURATE this screen counts 3 · 2 · 1, then tells you to
+              When the dignitary presses SWITCH ON this screen counts 3 · 2 · 1, then tells you to
               start. Keep it open and in view.
             </p>
           </>

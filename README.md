@@ -1,7 +1,7 @@
 # TUDA Amani Kere Musical Fountain — Inauguration Screen
 
 A ceremony web app for the inauguration of the Amani Kere Musical Fountain, designed for an iPad
-in landscape. The dignitary touches **INAUGURATE**, the screen counts **3 · 2 · 1**, the curtain opens, and a
+in landscape. The dignitary touches **SWITCH ON**, the screen counts **3 · 2 · 1**, the curtain opens, and a
 "Ceremonially Inaugurated" screen stays up until the organiser resets it.
 
 > **This app does not start the fountain.**
@@ -231,7 +231,7 @@ src/
   utils/image.js               resizes uploaded images
   utils/operatorLink.js        sends the button-pressed signal to the signal server
   components/
-    WelcomeScreen.jsx          welcome screen and the INAUGURATE button
+    WelcomeScreen.jsx          welcome screen and the SWITCH ON button
     UnveilingScreen.jsx        golden light, 3 · 2 · 1 countdown and curtain reveal
     InauguratedScreen.jsx      persistent acknowledgement screen
     FountainAnimation.jsx      decorative SVG fountain

@@ -32,7 +32,7 @@ export const defaultEventConfig = {
   acknowledgement: 'With the TUDA Team',
 
   // Welcome screen button
-  buttonLabel: 'INAUGURATE',
+  buttonLabel: 'SWITCH ON',
   buttonHint: 'Touch to unveil',
 
   // Spoken aloud by the device after the chime (only when Ceremony sound is on).
