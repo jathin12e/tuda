@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import InauguratedScreen from './components/InauguratedScreen.jsx';
 import OperatorScreen from './components/OperatorScreen.jsx';
 import OrganiserPanel from './components/OrganiserPanel.jsx';
@@ -53,30 +53,14 @@ function useRoute() {
 }
 
 /*
- * Invisible organiser shortcut: press and hold the top-left corner of the
- * ceremony screen for two seconds. Needed when the app runs from the Home
- * Screen, where there is no address bar to type /organiser into.
+ * Small "Organiser" button in the top-left corner of the ceremony screen.
+ * It is hidden while the unveiling plays.
  */
-const HOLD_MS = 2000;
-
-function OrganiserHotspot({ onOpen }) {
-  const timer = useRef(0);
-  const cancel = () => clearTimeout(timer.current);
-  useEffect(() => () => clearTimeout(timer.current), []);
-
+function OrganiserButton({ onOpen }) {
   return (
-    <div
-      className="organiser-hotspot"
-      aria-hidden="true"
-      onPointerDown={() => {
-        cancel();
-        timer.current = setTimeout(onOpen, HOLD_MS);
-      }}
-      onPointerUp={cancel}
-      onPointerLeave={cancel}
-      onPointerCancel={cancel}
-      onContextMenu={(event) => event.preventDefault()}
-    />
+    <button type="button" className="organiser-link" onClick={onOpen}>
+      Organiser
+    </button>
   );
 }
 
@@ -194,7 +178,7 @@ export default function App() {
         />
       )}
 
-      {!unveiling && <OrganiserHotspot onOpen={openOrganiser} />}
+      {!unveiling && <OrganiserButton onOpen={openOrganiser} />}
     </>
   );
 }

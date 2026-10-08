@@ -93,12 +93,12 @@ deliberately contains no government logos, seals or portraits.
 ### Reaching the organiser page on the day
 
 - In a browser: go to `/organiser`.
-- In the Home Screen app (no address bar): **press and hold the top-left corner of the ceremony
-  screen for two seconds.** The corner is invisible and does nothing on a short touch.
+- On the ceremony screen: tap the small **Organiser** button in the top-left corner. It is on both
+  the welcome and the inaugurated screens, and hidden while the countdown and curtain play.
 
 ### `/organiser` is not a secure admin area
 
-It is a convenience page with no login. Anyone who knows the address (or the corner gesture) on
+It is a convenience page with no login. Anyone who taps the Organiser button, or knows the address, on
 that device can change the wording or reset the screen. It only affects the device it is opened on;
 there is no server and nothing is shared between devices. Do not rely on it for access control —
 keep the iPad supervised.
@@ -188,7 +188,7 @@ except offline storage, which needs HTTPS and the production build.
 1. Connect the iPad to the internet and open the hosted address in **Safari**.
 2. Tap **Share** → **Add to Home Screen** → **Add**.
 3. Open the app from its new icon. It runs full screen without Safari's toolbars.
-4. Hold the top-left corner for two seconds to open the organiser page.
+4. Tap **Organiser** in the top-left corner to open the organiser page.
 
 The Home Screen app has **its own storage, separate from Safari**. Settings saved in Safari do not
 carry over, so enter the event details and check offline readiness *inside the Home Screen app*.

@@ -543,18 +543,31 @@ button {
   text-transform: uppercase;
 }
 
-.organiser-hotspot {
+.organiser-link {
   position: fixed;
-  top: 0;
-  left: 0;
+  top: max(12px, env(safe-area-inset-top));
+  left: max(12px, env(safe-area-inset-left));
   z-index: 20;
-  width: 76px;
-  height: 76px;
-  touch-action: none;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid rgba(217, 178, 95, 0.55);
+  border-radius: 999px;
+  background: rgba(4, 15, 34, 0.55);
+  color: var(--gold-200);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  touch-action: manipulation;
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;
+}
+
+.organiser-link:active {
+  background: rgba(217, 178, 95, 0.25);
 }
 
 /* ==========================================================================

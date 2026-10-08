@@ -612,7 +612,7 @@ export default function OrganiserPanel({
                 <li>Open the app from its new Home Screen icon. It runs without Safari’s toolbars.</li>
                 <li>
                   The Home Screen app keeps its own settings. Open this organiser page inside it
-                  (press and hold the top-left corner of the ceremony screen for two seconds) to
+                  (tap the “Organiser” button in the top-left corner of the ceremony screen) to
                   enter the event details and confirm offline readiness there.
                 </li>
               </ol>
