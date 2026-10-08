@@ -3,8 +3,12 @@ import { useEffect, useRef } from 'react';
 /*
  * Decorative musical fountain: a small water-particle simulation on a canvas.
  * Each nozzle throws droplets that rise, slow, break up and fall back under
- * gravity, lit from below like a real fountain at night. The jets are tallest
- * at the sides and low in the centre so they frame the ceremony text.
+ * gravity, lit from below like a real fountain at night.
+ *
+ * On wide screens the jets are tallest at the sides and low in the centre, so
+ * they frame the ceremony text. On tall, narrow screens (phones held upright)
+ * there is no room beside the text, so the display sits in a band along the
+ * bottom of the screen, tallest in the centre.
  *
  *   variant="ambient"      quiet display for the welcome screen
  *   variant="celebration"  fuller, brighter display for the inaugurated screen
@@ -121,6 +125,7 @@ export default function FountainAnimation({ variant = 'ambient', active = true }
     let reach = 0; // pixel height of a full-strength jet
     let gravity = 0;
     let ramp = 0; // 0 → 1 as the nozzles open
+    let upright = false; // tall, narrow screen: centre-tall display in a bottom band
     let clock = 0;
 
     const resize = () => {
@@ -132,10 +137,24 @@ export default function FountainAnimation({ variant = 'ambient', active = true }
       ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
       const water = waterRef.current ? waterRef.current.clientHeight : 30;
       baseY = height - water * 0.6;
-      // Limited by width as well, so jets stay beside the text on narrow screens.
-      reach = Math.min(baseY * 0.8, width * 0.42);
+      upright = width < height * 1.05;
+      // Wide: limited by width too, so the tall jets stay beside the text.
+      // Upright: fills the band the layout keeps clear at the bottom (see
+      // the portrait rules in styles.css).
+      if (upright) {
+        // The canvas is 64% of the screen height; the clear band is 21% of it,
+        // or 14% on short phones — keep in step with styles.css.
+        const screen = height / 0.64;
+        reach = Math.min(screen * (screen < 700 ? 0.14 : 0.21) * 0.9, width * 0.5);
+      } else {
+        reach = Math.min(baseY * 0.8, width * 0.42);
+      }
       gravity = (2 * reach) / (RISE_TIME * RISE_TIME);
     };
+
+    // Relative height of a jet: the side-tall profile is mirrored to
+    // centre-tall on upright screens.
+    const span = (jet) => (upright ? 1.26 - jet.height : jet.height);
 
     const simulate = (dt) => {
       clock += dt;
@@ -150,7 +169,7 @@ export default function FountainAnimation({ variant = 'ambient', active = true }
         jet.power = ramp * strength * own * sweep;
         if (jet.power < 0.04) return;
 
-        const launch = Math.sqrt(2 * gravity * reach * jet.height * jet.power);
+        const launch = Math.sqrt(2 * gravity * reach * span(jet) * jet.power);
         const flight = (2 * launch) / gravity;
         jet.pending += ((capacity * jet.height) / totalWeight / flight) * dt;
         while (jet.pending >= 1) {
@@ -187,11 +206,11 @@ export default function FountainAnimation({ variant = 'ambient', active = true }
     // Traces the solid stream of one jet: straight up for a vertical nozzle,
     // a full arc for a leaning one.
     const traceStream = (jet, x) => {
-      const launch = Math.sqrt(2 * gravity * reach * jet.height * jet.power) * 0.965;
+      const launch = Math.sqrt(2 * gravity * reach * span(jet) * jet.power) * 0.965;
       const ux = launch * Math.sin(jet.lean);
       const uy = -launch * Math.cos(jet.lean);
       const end = jet.lean === 0 ? -uy / gravity : (-2 * uy) / gravity;
-      const sway = Math.sin(clock * 2.6 + jet.phase) * reach * jet.height * 0.012;
+      const sway = Math.sin(clock * 2.6 + jet.phase) * reach * span(jet) * 0.012;
       ctx.moveTo(x, baseY);
       for (let step = 1; step <= 10; step++) {
         const t = (end * step) / 10;
@@ -211,7 +230,7 @@ export default function FountainAnimation({ variant = 'ambient', active = true }
         if (jet.power < 0.04) continue;
         const x = width * (0.5 + jet.offset);
         const sprite = sprites[jet.colour];
-        const column = reach * jet.height * jet.power;
+        const column = reach * span(jet) * jet.power;
 
         // Light pooled on the water at the foot of the jet.
         const pool = 70 + column * 0.3;
