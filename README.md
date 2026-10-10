@@ -95,8 +95,8 @@ deliberately contains no government logos, seals or portraits.
 - One touch activates it; further touches are ignored.
 - The inauguration and its timestamp are saved *before* the animation starts, so refreshing the
   page — even mid-animation — shows the completed screen.
-- The inaugurated screen stays until someone presses **Reset to welcome screen** on the organiser
-  page and confirms. Resetting clears only the inauguration; event details and images are kept.
+- The inaugurated screen stays until someone taps **Refresh** in its top-left corner (and taps it
+  again to confirm), or presses **Reset to welcome screen** on the organiser page and confirms. Resetting clears only the inauguration; event details and images are kept.
 
 ### Reaching the organiser page on the day
 

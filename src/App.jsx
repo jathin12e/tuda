@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import InauguratedScreen from './components/InauguratedScreen.jsx';
 import OperatorScreen from './components/OperatorScreen.jsx';
 import OrganiserPanel from './components/OrganiserPanel.jsx';
@@ -53,14 +53,51 @@ function useRoute() {
 }
 
 /*
- * Small "Organiser" button in the top-left corner of the ceremony screen.
- * It is hidden while the unveiling plays.
+ * Small buttons in the top-left corner of the ceremony screen. They are hidden
+ * while the unveiling plays.
+ *
+ *   Organiser  opens the organiser page.
+ *   Refresh    shown once the screen is inaugurated: returns to the welcome
+ *              screen so the button can be pressed again. It needs a second
+ *              tap within a few seconds, so a stray touch cannot undo the
+ *              inauguration.
  */
-function OrganiserButton({ onOpen }) {
+const CONFIRM_MS = 4000;
+
+function ScreenControls({ onOpenOrganiser, onRefresh, showRefresh }) {
+  const [confirming, setConfirming] = useState(false);
+  const timer = useRef(0);
+  useEffect(() => () => clearTimeout(timer.current), []);
+  useEffect(() => {
+    if (!showRefresh) setConfirming(false);
+  }, [showRefresh]);
+
+  const handleRefresh = () => {
+    clearTimeout(timer.current);
+    if (confirming) {
+      setConfirming(false);
+      onRefresh();
+      return;
+    }
+    setConfirming(true);
+    timer.current = setTimeout(() => setConfirming(false), CONFIRM_MS);
+  };
+
   return (
-    <button type="button" className="organiser-link" onClick={onOpen}>
-      Organiser
-    </button>
+    <div className="screen-controls">
+      <button type="button" className="organiser-link" onClick={onOpenOrganiser}>
+        Organiser
+      </button>
+      {showRefresh && (
+        <button
+          type="button"
+          className={`organiser-link${confirming ? ' organiser-link--confirm' : ''}`}
+          onClick={handleRefresh}
+        >
+          {confirming ? 'Tap again to reset' : 'Refresh'}
+        </button>
+      )}
+    </div>
   );
 }
 
@@ -180,7 +217,13 @@ export default function App() {
         />
       )}
 
-      {!unveiling && <OrganiserButton onOpen={openOrganiser} />}
+      {!unveiling && (
+        <ScreenControls
+          onOpenOrganiser={openOrganiser}
+          onRefresh={handleReset}
+          showRefresh={phase === 'inaugurated'}
+        />
+      )}
     </>
   );
 }
